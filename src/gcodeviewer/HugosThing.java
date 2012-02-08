@@ -87,5 +87,35 @@ public class HugosThing {
 		}
 	}
 	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		System.out.println("// wham bam thank you Ted :-)\n\n");
+		System.out.println("// wham bam thank you Ted :-)\n\n");
+		
+		String sourceFile = args[0];
+		System.out.println("(file: " + sourceFile + ")");
+		try
+		{
+			Scanner in = new Scanner( new File(sourceFile)); 
+			ArrayList<String> vect = new ArrayList<String>();
+			while( in.hasNext())
+			{
+				
+				String nextline = in.nextLine();
+				System.out.println(nextline);
+				vect.add(nextline);
+			}
+			
+			GCodeParser parser = new MightyParser();
+			parser.parse(vect);
+			new HugosThing().writeToScad(parser.getPath());
+		}
+		catch(Exception fail)
+		{
+			System.out.println(fail);
+			System.out.println("You moron! you made me crash");
+		}	
+	}
+	
 
 }
