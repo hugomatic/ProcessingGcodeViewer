@@ -1,5 +1,7 @@
-package gcodeviewer;
+package g2scad;
 
+import gcodeviewer.parsers.GCodeParser;
+import gcodeviewer.parsers.MightyParser;
 import gcodeviewer.toolpath.GCodeEvent;
 import gcodeviewer.toolpath.GCodeEventToolpath;
 import gcodeviewer.toolpath.events.EndExtrusion;
@@ -8,6 +10,11 @@ import gcodeviewer.toolpath.events.SetFeedrate;
 import gcodeviewer.toolpath.events.SetMotorSpeedRPM;
 import gcodeviewer.toolpath.events.StartExtrusion;
 import gcodeviewer.utils.Point5d;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Scanner;
+
 import replicatorg.ToolModel;
 
 public class HugosThing {
@@ -15,7 +22,7 @@ public class HugosThing {
 	public void writeToScad(GCodeEventToolpath path) {
 		double feedrate = 0;
 		double extrusionSpeed = 0;
-		boolean motorEnabled = false;
+		boolean isExtruding = false;
 		Point5d lastPoint = null;
 		for(GCodeEvent evt : path.events()) {
 
@@ -31,19 +38,54 @@ public class HugosThing {
 					extrusionSpeed = Math.abs(extrusionSpeed)*-1;
 				if(((StartExtrusion)evt).direction == ToolModel.MOTOR_CLOCKWISE)
 					extrusionSpeed = Math.abs(extrusionSpeed);
-				motorEnabled = true;
+				isExtruding = true;
 			}
 
 			if(evt instanceof EndExtrusion) {
-				motorEnabled = false;
+				isExtruding = false;
 			}
 			
-			if(evt instanceof MoveTo) {
+			if(evt instanceof MoveTo) 
+			{
+				String magick = "extrude";
 				Point5d newPoint = ((MoveTo)evt).point;
 				if(lastPoint != null)
-					System.out.println("magick("+lastPoint.x()+", "+lastPoint.y()+", "+lastPoint.z()+", "+newPoint.x()+", "+newPoint.y()+", "+newPoint.z()+", "+feedrate+", "+(motorEnabled ? extrusionSpeed : 0)+");");
+				{	
+					
+					if(extrusionSpeed == 0 || !isExtruding)
+					{
+						magick = "moveto";
+					}
+					if(extrusionSpeed > 10 && isExtruding)
+					{
+						magick = "squirt";
+					}
+					if(extrusionSpeed < 0 && isExtruding)
+					{
+						magick = "snort";
+					}
+					
+					System.out.println(magick + "(" +lastPoint.x()+
+										", " + 
+										lastPoint.y() +
+										", " +
+										lastPoint.z() + 
+										", " + 
+										newPoint.x() + 
+										", " +
+										newPoint.y() + 
+										", " + 
+										newPoint.z() +
+										", " + 
+										feedrate + 
+										", " + 
+										extrusionSpeed +
+										");");
+				}
 				lastPoint = newPoint;
 			}
 		}
 	}
+	
+
 }
